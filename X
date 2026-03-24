@@ -1,0 +1,130 @@
+--// DESYNC UI (5s Countdown → Reset Player)
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Remove old UI
+local old = playerGui:FindFirstChild("DesyncUI")
+if old then
+	old:Destroy()
+end
+
+--// GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "DesyncUI"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+--// FRAME
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 270, 0, 155)
+frame.Position = UDim2.new(0.5, -135, 0.72, -77)
+frame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 14)
+corner.Parent = frame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 140, 255)
+stroke.Thickness = 2
+stroke.Parent = frame
+
+--// TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 38)
+title.BackgroundTransparency = 1
+title.Text = "DESYNC"
+title.TextColor3 = Color3.fromRGB(0, 170, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.Parent = frame
+
+--// BUTTON
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.82, 0, 0, 52)
+button.Position = UDim2.new(0.09, 0, 0.38, 0)
+button.BackgroundColor3 = Color3.fromRGB(0, 110, 230)
+button.Text = "DESYNC"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 22
+button.Parent = frame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 12)
+buttonCorner.Parent = button
+
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Color = Color3.fromRGB(0, 200, 255)
+buttonStroke.Thickness = 2
+buttonStroke.Parent = button
+
+--// STATUS
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, -20, 0, 28)
+status.Position = UDim2.new(0, 10, 1, -34)
+status.BackgroundTransparency = 1
+status.Text = "Status: Idle"
+status.TextColor3 = Color3.fromRGB(180, 180, 180)
+status.Font = Enum.Font.Gotham
+status.TextSize = 14
+status.Parent = frame
+
+local busy = false
+
+-- click animation
+local function pressAnim()
+	local down = TweenService:Create(button, TweenInfo.new(0.1), {
+		Size = UDim2.new(0.78, 0, 0, 48)
+	})
+	local up = TweenService:Create(button, TweenInfo.new(0.1), {
+		Size = UDim2.new(0.82, 0, 0, 52)
+	})
+	down:Play()
+	task.delay(0.1, function()
+		up:Play()
+	end)
+end
+
+button.MouseButton1Click:Connect(function()
+	if busy then return end
+	busy = true
+	
+	pressAnim()
+
+	button.Text = "WAIT..."
+	button.BackgroundColor3 = Color3.fromRGB(0, 80, 180)
+
+	-- countdown
+	for i = 5, 1, -1 do
+		status.Text = "Status: " .. i
+		task.wait(1)
+	end
+
+	status.Text = "Status: Resetting..."
+	status.TextColor3 = Color3.fromRGB(0, 200, 255)
+
+	--// RESET PLAYER
+	local char = player.Character
+	if char and char:FindFirstChild("Humanoid") then
+		char.Humanoid.Health = 0
+	end
+
+	task.wait(1)
+
+	-- reset UI
+	status.Text = "Status: Idle"
+	status.TextColor3 = Color3.fromRGB(180, 180, 180)
+	button.Text = "DESYNC"
+	button.BackgroundColor3 = Color3.fromRGB(0, 110, 230)
+
+	busy = false
+end)
